@@ -5,11 +5,14 @@ import { Button } from "@workspace/ui/components/button"
 import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useRef, useState } from "react"
 
+const CHAT_DISABLED = true
+
 export function Chat() {
   const { messages, sendMessage, status, setMessages } = useChat()
   const [input, setInput] = useState("")
   const [mode, setMode] = useState<"text" | "image">("text")
   const [isGeneratingImage, setIsGeneratingImage] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(true)
   const isLoading = status === "submitted" || status === "streaming" || isGeneratingImage
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -21,7 +24,7 @@ export function Chat() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!input.trim() || isLoading) return
+    if (CHAT_DISABLED || !input.trim() || isLoading) return
 
     const currentInput = input
     setInput("")
@@ -85,7 +88,23 @@ export function Chat() {
   }
 
   return (
-    <div className="mx-auto flex h-full w-full max-w-2xl flex-col border-x bg-background">
+    <div className="relative mx-auto flex h-full w-full max-w-2xl flex-col border-x bg-background">
+      {CHAT_DISABLED && isDialogOpen && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-lg border bg-background p-5 shadow-xl">
+            <h2 className="text-base font-semibold">Chat desabilitado</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Este chat está desabilitado porque este projeto é apenas uma POC.
+            </p>
+            <div className="mt-4 flex justify-end">
+              <Button size="sm" onClick={() => setIsDialogOpen(false)}>
+                Entendi
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         ref={scrollRef}
         className="flex-1 space-y-4 overflow-y-auto scroll-smooth p-4"
@@ -172,6 +191,7 @@ export function Chat() {
               "px-3 py-1 text-xs font-medium rounded-md transition-all",
               mode === "text" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
+            disabled={CHAT_DISABLED}
           >
             Texto
           </button>
@@ -181,6 +201,7 @@ export function Chat() {
               "px-3 py-1 text-xs font-medium rounded-md transition-all",
               mode === "image" ? "bg-background shadow-sm" : "text-muted-foreground hover:text-foreground"
             )}
+            disabled={CHAT_DISABLED}
           >
             Imagem
           </button>
@@ -192,9 +213,9 @@ export function Chat() {
             value={input}
             placeholder={mode === "text" ? "Digite sua mensagem..." : "Descreva a imagem que deseja gerar..."}
             onChange={(e) => setInput(e.target.value)}
-            disabled={isLoading}
+            disabled={CHAT_DISABLED || isLoading}
           />
-          <Button type="submit" disabled={isLoading || !input.trim()}>
+          <Button type="submit" disabled={CHAT_DISABLED || isLoading || !input.trim()}>
             {mode === "text" ? "Enviar" : "Gerar"}
           </Button>
         </form>
