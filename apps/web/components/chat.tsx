@@ -2,10 +2,56 @@
 
 import { useChat } from "@ai-sdk/react"
 import { Button } from "@workspace/ui/components/button"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@workspace/ui/components/dialog"
 import { cn } from "@workspace/ui/lib/utils"
 import { useEffect, useRef, useState } from "react"
 
 const CHAT_DISABLED = true
+
+const DEMO_MESSAGES = [
+  {
+    id: "demo-user-1",
+    role: "user",
+    parts: [{ type: "text", text: "Qual o resumo de CAC?" }],
+    createdAt: new Date(),
+  },
+  {
+    id: "demo-assistant-1",
+    role: "assistant",
+    parts: [
+      {
+        type: "text",
+        text: "CAC é o Custo de Aquisição de Cliente. É quanto a empresa investe, em média, para conquistar um novo cliente.",
+      },
+    ],
+    createdAt: new Date(),
+  },
+  {
+    id: "demo-user-2",
+    role: "user",
+    parts: [{ type: "text", text: "Crie uma imagem pequena para campanha de verão." }],
+    createdAt: new Date(),
+  },
+  {
+    id: "demo-assistant-2",
+    role: "assistant",
+    parts: [
+      { type: "text", text: "Exemplo de renderização de imagem no chat (300x300):" },
+      {
+        type: "data",
+        data: { type: "image", url: "https://placehold.co/300x300/png?text=POC+Image" },
+      },
+    ],
+    createdAt: new Date(),
+  },
+] as any[]
 
 export function Chat() {
   const { messages, sendMessage, status, setMessages } = useChat()
@@ -21,6 +67,12 @@ export function Chat() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [messages, status, isGeneratingImage])
+
+  useEffect(() => {
+    if (CHAT_DISABLED && messages.length === 0) {
+      setMessages(DEMO_MESSAGES)
+    }
+  }, [messages.length, setMessages])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -89,21 +141,21 @@ export function Chat() {
 
   return (
     <div className="relative mx-auto flex h-full w-full max-w-2xl flex-col border-x bg-background">
-      {CHAT_DISABLED && isDialogOpen && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-lg border bg-background p-5 shadow-xl">
-            <h2 className="text-base font-semibold">Chat desabilitado</h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+      <Dialog open={CHAT_DISABLED && isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent showCloseButton={false}>
+          <DialogHeader>
+            <DialogTitle>Chat desabilitado</DialogTitle>
+            <DialogDescription>
               Este chat está desabilitado porque este projeto é apenas uma POC.
-            </p>
-            <div className="mt-4 flex justify-end">
-              <Button size="sm" onClick={() => setIsDialogOpen(false)}>
-                Entendi
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button size="sm" onClick={() => setIsDialogOpen(false)}>
+              Entendi
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <div
         ref={scrollRef}
